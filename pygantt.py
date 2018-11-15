@@ -121,7 +121,7 @@ parser = argparse.ArgumentParser(prog="pygantt")
 parser.add_argument("file", help="Path to sectioned CSV file.")
 parser.add_argument("-o", "--output", default="gantt.png", help="Output filename.")
 parser.add_argument("--width", default=10, help="Width of output in inches.")
-parser.add_argument("--height", default=6, help="Height of output in inches.")
+parser.add_argument("--height", default=4, help="Height of output in inches.")
 
 if __name__ == "__main__":
     args = parser.parse_args()
