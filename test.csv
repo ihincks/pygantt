@@ -1,0 +1,11 @@
+*Phase 1
+0, 3, This is the first task and will take forever
+3, 6, This is a banana
+
+*Phase 2
+2, 9, This is the second task and will take forever
+1, 7, This is not a banana
+
+*Phase 3
+5, 7, This is the second task and will take forever
+3, 7, This is a pinable
