@@ -3,7 +3,24 @@
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import argparse
+import time
+import os
 
+class FileWatcher:
+    def __init__(self, filepath):
+        self.old_content = None
+        self.filepath = os.path.abspath(filepath)
+
+    @property
+    def has_changed(self):
+        try:
+            with open(self.filepath, "r") as f:
+                content = f.read()
+        except FileNotFoundError:
+            return False
+        out = content != self.old_content
+        self.old_content = content
+        return out
 
 def parse_csv(filepath):
     data = OrderedDict()
@@ -119,6 +136,7 @@ class Gantt(object):
 
 parser = argparse.ArgumentParser(prog="pygantt")
 parser.add_argument("file", help="Path to sectioned CSV file.")
+parser.add_argument("-c", "--continuous", default=False, help="Whether to keep the program alive and look for file changes every second.", action="store_true")
 parser.add_argument("-o", "--output", default="gantt.png", help="Output filename.")
 parser.add_argument("--width", default=10, help="Width of output in inches.")
 parser.add_argument("--height", default=4, help="Height of output in inches.")
@@ -126,15 +144,26 @@ parser.add_argument("--height", default=4, help="Height of output in inches.")
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    print("Parsing {}...".format(args.file))
-    g = Gantt(args.file)
+    file_watcher = FileWatcher(args.file)
 
-    print("Plotting figure...")
-    fig = plt.figure(figsize=(args.width, args.height))
-    g.plot()
-    fig.tight_layout()
+    while True:
+        if file_watcher.has_changed:
+            print("Parsing {}...".format(args.file))
+            g = Gantt(args.file)
 
-    print("Saving to {}...".format(args.output))
-    fig.savefig(args.output)
+            print("Plotting figure...")
+            fig = plt.figure(figsize=(args.width, args.height))
+            g.plot()
+            fig.tight_layout()
+
+            print("Saving to {}...".format(args.output))
+            fig.savefig(args.output)
+            if args.continuous:
+                print("Waiting for changes...")
+                time.sleep(1)
+            else:
+                break
+
+        
 
     print("Done.")
