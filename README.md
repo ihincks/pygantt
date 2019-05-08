@@ -2,6 +2,24 @@
 
 A simple matplotlib-based gantt chart maker.
 
+## Usage
+
+```
+pygantt [-h] [-c] [-o OUTPUT] [--width WIDTH] [--height HEIGHT] file
+
+positional arguments:
+  file                  Path to sectioned CSV file.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c, --continuous      Whether to keep the program alive and look for file
+                        changes every second.
+  -o OUTPUT, --output OUTPUT
+                        Output filename.
+  --width WIDTH         Width of output in inches.
+  --height HEIGHT       Height of output in inches.
+```
+
 ## Example
 
 Write a simple sectioned CSV file:

@@ -8,18 +8,14 @@ import os
 
 class FileWatcher:
     def __init__(self, filepath):
-        self.old_content = None
+        self._mtime = None
         self.filepath = os.path.abspath(filepath)
 
     @property
     def has_changed(self):
-        try:
-            with open(self.filepath, "r") as f:
-                content = f.read()
-        except FileNotFoundError:
-            return False
-        out = content != self.old_content
-        self.old_content = content
+        mtime = os.stat(self.filepath).st_mtime
+        out = mtime != self._mtime
+        self._mtime = mtime
         return out
 
 def parse_csv(filepath):
@@ -160,9 +156,9 @@ if __name__ == "__main__":
             fig.savefig(args.output)
             if args.continuous:
                 print("Waiting for changes...")
-                time.sleep(1)
             else:
                 break
+        time.sleep(1)
 
         
 
