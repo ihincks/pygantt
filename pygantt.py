@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import argparse
@@ -37,7 +38,9 @@ def parse_csv(filepath):
                 current_section = line[1:].strip()
                 data[current_section] = []
             else:
-                start, finish, item = line.split(",")
+                parts = line.split(",")
+                start, finish = parts[:2]
+                item = ",".join(parts[2:])
                 data[current_section].append(
                     [maybe_to_num(start), maybe_to_num(finish), item]
                 )
@@ -136,6 +139,12 @@ parser.add_argument("-c", "--continuous", default=False, help="Whether to keep t
 parser.add_argument("-o", "--output", default="gantt.png", help="Output filename.")
 parser.add_argument("--width", default=10, help="Width of output in inches.")
 parser.add_argument("--height", default=4, help="Height of output in inches.")
+parser.add_argument("--xtick-fontsize", default=12, help="Fontsize of x ticks.")
+parser.add_argument("--ytick-fontsize", default=12, help="Fontsize of y ticks.")
+parser.add_argument("--xlabel-fontsize", default=12, help="Fontsize of x labels.")
+parser.add_argument("--legend-fontsize", default=12, help="Fontsize of legend.")
+parser.add_argument("--tick-major", default=1, help="How often to put an x tick.")
+parser.add_argument("--xlabel", default="Months", help="x-axis label.")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -148,18 +157,23 @@ if __name__ == "__main__":
             g = Gantt(args.file)
 
             print("Plotting figure...")
-            fig = plt.figure(figsize=(args.width, args.height))
+            fig = plt.figure(figsize=(int(args.width), int(args.height)))
+            g.xtick_fontsize = int(args.xtick_fontsize)
+            g.ytick_fontsize = int(args.ytick_fontsize)
+            g.xlabel_fontsize = int(args.xlabel_fontsize)
+            g.legend_fontsize = int(args.legend_fontsize)
             g.plot()
+            plt.xticks(np.arange(0, g.ax.get_xlim()[1], int(args.tick_major)))
+            plt.xlabel(args.xlabel)
             fig.tight_layout()
 
             print("Saving to {}...".format(args.output))
             fig.savefig(args.output)
+
             if args.continuous:
                 print("Waiting for changes...")
             else:
                 break
         time.sleep(1)
-
-        
 
     print("Done.")
