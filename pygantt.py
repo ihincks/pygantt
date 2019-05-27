@@ -6,18 +6,21 @@ from collections import OrderedDict
 import argparse
 import time
 import os
+import yaml
 
 class FileWatcher:
-    def __init__(self, filepath):
-        self._mtime = None
-        self.filepath = os.path.abspath(filepath)
+    def __init__(self, filepaths):
+        self.filepaths = [os.path.abspath(f) for f in filepaths]
+        self._mtime = [None] * len(self.filepaths)
 
     @property
     def has_changed(self):
-        mtime = os.stat(self.filepath).st_mtime
-        out = mtime != self._mtime
-        self._mtime = mtime
-        return out
+        out = [False] * len(self.filepaths)
+        for idx, filepath in enumerate(self.filepaths):
+            mtime = os.stat(filepath).st_mtime
+            out[idx] = mtime != self._mtime[idx]
+            self._mtime[idx] = mtime
+        return any(out)
 
 def parse_csv(filepath):
     data = OrderedDict()
@@ -145,19 +148,38 @@ parser.add_argument("--xlabel-fontsize", default=12, help="Fontsize of x labels.
 parser.add_argument("--legend-fontsize", default=12, help="Fontsize of legend.")
 parser.add_argument("--tick-major", default=1, help="How often to put an x tick.")
 parser.add_argument("--xlabel", default="Months", help="x-axis label.")
+parser.add_argument("--conf", default="conf.yaml", help="Config YAML file specifying options.")
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    watch = [args.file]
 
-    file_watcher = FileWatcher(args.file)
+    has_conf = os.path.exists(args.conf)
+    def update_conf():
+        if has_conf:
+            with open(args.conf, "r") as f:
+                conf = yaml.load(f)
+            for option, value in conf.items():
+                option = option.replace("-", "_")
+                if not hasattr(args, option):
+                    print("Warning: Unknown option {}".format(option))
+                setattr(args, option.replace("-", "_"), value)
+    if has_conf:
+        watch += [args.conf]
+
+    file_watcher = FileWatcher(watch)
 
     while True:
         if file_watcher.has_changed:
+            if has_conf:
+                print("Updating Configuration {}...".format(args.conf))
+                update_conf()
+
             print("Parsing {}...".format(args.file))
             g = Gantt(args.file)
 
             print("Plotting figure...")
-            fig = plt.figure(figsize=(int(args.width), int(args.height)))
+            fig = plt.figure(figsize=(float(args.width), float(args.height)))
             g.xtick_fontsize = int(args.xtick_fontsize)
             g.ytick_fontsize = int(args.ytick_fontsize)
             g.xlabel_fontsize = int(args.xlabel_fontsize)
